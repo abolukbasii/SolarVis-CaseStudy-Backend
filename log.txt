@@ -26,3 +26,7 @@
 2024-03-01 21:16:36,680 - INFO - Received request: POST http://localhost:8000/addUser - Username: superadmin@gmail.com - Elapsed Time: 2.5669 seconds
 2024-03-01 21:17:58,065 - INFO - Received request: DELETE http://localhost:8000/deleteUser - Username: superadmin@gmail.com - Elapsed Time: 2.3485 seconds
 2024-03-01 21:18:00,429 - INFO - Received request: DELETE http://localhost:8000/deleteUser - Username: superadmin@gmail.com - Elapsed Time: 2.3644 seconds
+2024-03-02 14:13:36,296 - INFO - Received request: POST http://localhost:8000/superAdminCreateTask - Username: superadmin@gmail.com - Elapsed Time: 0.5693 seconds
+2024-03-02 14:14:32,933 - INFO - Received request: PUT http://localhost:8000/updateUser - Username: superadmin@gmail.com - Elapsed Time: 0.5724 seconds
+2024-03-02 14:14:41,465 - INFO - Received request: PUT http://localhost:8000/updateUser - Username: superadmin@gmail.com - Elapsed Time: 0.5699 seconds
+2024-03-02 14:15:00,404 - INFO - Received request: PUT http://localhost:8000/suspendOrganization - Username: superadmin@gmail.com - Elapsed Time: 1.8751 seconds

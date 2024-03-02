@@ -1,6 +1,7 @@
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi.encoders import jsonable_encoder
 import logging
 import Enums
 import auth
@@ -68,11 +69,11 @@ async def login(login_data: userDTO.LoginDTO, db: Session = Depends(auth.get_db)
     expires_date = 60 # minutes
     authentication = auth.authenticate_user(login_data.username, login_data.password, db)
     if not authentication['success']:
-        return {'success': False, 'detail': authentication['detail']}
+        return jsonable_encoder({'success': False, 'detail': authentication['detail']})
     user = db.query(models.Users).filter(models.Users.username == login_data.username).first()
     organization = db.query(models.Organization).first()
     token = auth.create_access_token(username=user.username, user_id=user.id, expires_date=timedelta(minutes=expires_date))
-    return {'success': True, "access_token": token, "expires_date": expires_date, "token_type": "bearer", "user_id": user.id, "role": user.role, "first_name": user.first_name, "last_name": user.last_name, "username": user.username, "suspended": organization.suspended}
+    return jsonable_encoder({'success': True, "access_token": token, "expires_date": expires_date, "token_type": "bearer", "user_id": user.id, "role": user.role, "first_name": user.first_name, "last_name": user.last_name, "username": user.username, "suspended": organization.suspended})
 
 @app.get("/getUserTasks", response_model=dict, status_code=status.HTTP_200_OK)
 async def getUserTasks(user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
@@ -94,7 +95,7 @@ async def getUserTasks(user: models.Users = Depends(auth.get_current_user), db: 
         }
         tasks_with_assign_user_name.append(task_dict)
     users = db.query(models.Users).all()
-    return {'success': True, 'tasks': tasks_with_assign_user_name, 'users': users}
+    return jsonable_encoder({'success': True, 'tasks': tasks_with_assign_user_name, 'users': users})
 
 @app.delete("/deleteTask", response_model=dict, status_code=status.HTTP_200_OK)
 async def deleteTask(deleteTask: taskDTO.DeleteTaskDTO, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
@@ -106,7 +107,7 @@ async def deleteTask(deleteTask: taskDTO.DeleteTaskDTO, user: models.Users = Dep
         raise HTTPException(status_code=403, detail="You cannot delete a task that is not assigned to you")
     db.delete(task)
     db.commit()
-    return {'success': True, 'detail': "Successfully deleted the task."}
+    return jsonable_encoder({'success': True, 'detail': "Successfully deleted the task."})
 
 
 @app.post("/userCreateTask", response_model=dict, status_code=status.HTTP_200_OK)
@@ -123,9 +124,9 @@ async def userCreateTask(userCreateTask: taskDTO.UserCreateTask, user: models.Us
         )
         db.add(create_user_task)
         db.commit()
-        return {'success': True, 'detail': "Successfully created the task."}
+        return jsonable_encoder({'success': True, 'detail': "Successfully created the task."})
     except:
-        return {'success': False, 'detail': "Error creating the task."}
+        return jsonable_encoder({'success': False, 'detail': "Error creating the task."})
 
 @app.post("/superAdminCreateTask", response_model=dict, status_code=status.HTTP_200_OK)
 async def userCreateTask(superadminCreateTask: taskDTO.SuperAdminCreateTask, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
@@ -143,11 +144,11 @@ async def userCreateTask(superadminCreateTask: taskDTO.SuperAdminCreateTask, use
             )
             db.add(create_user_task)
             db.commit()
-            return {'success': True, 'detail': "Successfully created the task."}
+            return jsonable_encoder({'success': True, 'detail': "Successfully created the task."})
         else:
-            return {'success': False, 'detail': "You are not autherized to assign a task."}
+            return jsonable_encoder({'success': False, 'detail': "You are not autherized to assign a task."})
     except:
-        return {'success': False, 'detail': "Error creating the task."}
+        return jsonable_encoder({'success': False, 'detail': "Error creating the task."})
 
 @app.put("/superAdminUpdateTask", response_model=dict, status_code=status.HTTP_200_OK)
 async def superAdminUpdateTask(superAdminUpdateTask: taskDTO.SuperAdminUpdateTask, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
@@ -161,11 +162,11 @@ async def superAdminUpdateTask(superAdminUpdateTask: taskDTO.SuperAdminUpdateTas
             task.due_date = superAdminUpdateTask.due_date
             task.updated_at = datetime.now()
             db.commit()
-            return {'success': True, 'detail': "Successfully edited the task."}
+            return jsonable_encoder({'success': True, 'detail': "Successfully edited the task."})
         else:
-            return {'success': False, 'detail': "You are not autherized to edit a task."}
+            return jsonable_encoder({'success': False, 'detail': "You are not autherized to edit a task."})
     except:
-        return {'success': False, 'detail': "Error editting the task."}
+        return jsonable_encoder({'success': False, 'detail': "Error editting the task."})
 
 @app.put("/updateTask", response_model=dict, status_code=status.HTTP_200_OK)
 async def updateTask(updateTask: taskDTO.UpdateTask, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
@@ -178,11 +179,11 @@ async def updateTask(updateTask: taskDTO.UpdateTask, user: models.Users = Depend
             task.due_date = updateTask.due_date
             task.updated_at = datetime.now()
             db.commit()
-            return {'success': True, 'detail': "Successfully edited the task."}
+            return jsonable_encoder({'success': True, 'detail': "Successfully edited the task."})
         else:
-            return {'success': False, 'detail': "You are not autherized to edit this task."}
+            return jsonable_encoder({'success': False, 'detail': "You are not autherized to edit this task."})
     except:
-        return {'success': False, 'detail': "Error edittinh the task."}
+        return jsonable_encoder({'success': False, 'detail': "Error edittinh the task."})
 
 @app.get("/getUserInfo", response_model=dict, status_code=status.HTTP_200_OK)
 async def getUserInfo(user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
@@ -193,7 +194,7 @@ async def getUserInfo(user: models.Users = Depends(auth.get_current_user), db: S
         'username': userData.username,
         'role': userData.role,
     }
-    return {'success': True, 'object': userInfo}
+    return jsonable_encoder({'success': True, 'object': userInfo})
 
 @app.put("/updateUser", response_model=dict, status_code=status.HTTP_200_OK)
 async def updateUser(updateUserData: userDTO.UpdateUserData, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
@@ -204,13 +205,13 @@ async def updateUser(updateUserData: userDTO.UpdateUserData, user: models.Users 
     userData.first_name = updateUserData.first_name
     userData.last_name = updateUserData.last_name
     db.commit()
-    return {'success': True, 'detail': 'Updated the user data'}
+    return jsonable_encoder({'success': True, 'detail': 'Updated the user data'})
 
 @app.get("/getAllTasks", response_model=dict, status_code=status.HTTP_200_OK)
 async def getAllTasks(user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
     userData = db.query(models.Users).filter(models.Users.id == user['id']).first()
     if userData.role == Enums.UserRoleEnum.user:
-        return {'success': False, 'detail': 'You are not allowed to see all tasks'}
+        return jsonable_encoder({'success': False, 'detail': 'You are not allowed to see all tasks'})
     tasks = db.query(models.Tasks).all()
     tasks_with_assign_user_name = []
 
@@ -231,37 +232,37 @@ async def getAllTasks(user: models.Users = Depends(auth.get_current_user), db: S
         }
         tasks_with_assign_user_name.append(task_dict)
     users = db.query(models.Users).all()
-    return {'success': True, 'tasks': tasks_with_assign_user_name, 'users': users, 'userRole': userData.role}
+    return jsonable_encoder({'success': True, 'tasks': tasks_with_assign_user_name, 'users': users, 'userRole': userData.role})
 
 @app.get("/getAllUsers", response_model=dict, status_code=status.HTTP_200_OK)
 async def getAllUsers(user: models.Users = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
     userData = db.query(models.Users).filter(models.Users.id == user['id']).first()
     if userData.role == Enums.UserRoleEnum.user:
-        return {'success': False, 'detail': 'You are not allowed to see all tasks'}
+        return jsonable_encoder({'success': False, 'detail': 'You are not allowed to see all tasks'})
     elif userData.role == Enums.UserRoleEnum.admin:
         users = db.query(models.Users).filter(models.Users.role == Enums.UserRoleEnum.user).all()
-        return {'success': True, 'users': users, 'userId': userData.id, 'userRole': userData.role}
+        return jsonable_encoder({'success': True, 'users': users, 'userId': userData.id, 'userRole': userData.role})
     else:
         users = db.query(models.Users).all()
-        return {'success': True, 'users': users, 'userId': userData.id, 'userRole': userData.role}
+        return jsonable_encoder({'success': True, 'users': users, 'userId': userData.id, 'userRole': userData.role})
 
 @app.post("/addUser", response_model=dict, status_code=status.HTTP_200_OK)
 async def addUser(addUser: userDTO.AddUser, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(get_db)):
 
     userData = db.query(models.Users).filter(models.Users.id == user['id']).first()
     if userData.role != Enums.UserRoleEnum.superadmin:
-        return {'success': False, 'detail': 'You are not allowed to add a user!'}
+        return jsonable_encoder({'success': False, 'detail': 'You are not allowed to add a user!'})
 
     email_user = db.query(models.DeletedUsers).filter(models.DeletedUsers.username == addUser.username.lower()).first()
 
     if email_user is not None and userData.role != Enums.UserRoleEnum.superadmin:
-        return {'success': False, 'detail': 'The user is deleted before. It can only added by Superadmin!'}
+        return jsonable_encoder({'success': False, 'detail': 'The user is deleted before. It can only added by Superadmin!'})
 
     email_user = db.query(models.Users).filter(models.Users.username == addUser.username.lower()).first()
     if email_user is not None:
-        return {'success': False, 'detail': 'There is already an account with this email!'}
+        return jsonable_encoder({'success': False, 'detail': 'There is already an account with this email!'})
     if addUser.role == Enums.UserRoleEnum.superadmin:
-        return {'success': False, 'detail': 'Not allowed!'}
+        return jsonable_encoder({'success': False, 'detail': 'Not allowed!'})
     create_user_model = models.Users(
         created_at=datetime.now(),
         updated_at=datetime.now(),
@@ -278,14 +279,14 @@ async def addUser(addUser: userDTO.AddUser, user: models.Users = Depends(auth.ge
         db.delete(email_user)
     db.add(create_user_model)
     db.commit()
-    return {'success': True, 'detail': 'User is created!'}
+    return jsonable_encoder({'success': True, 'detail': 'User is created!'})
 
 @app.delete("/deleteUser", response_model=dict, status_code=status.HTTP_200_OK)
 async def deleteUser(deleteUser: userDTO.DeleteUser, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     userId = deleteUser.userId
     userInfo = db.query(models.Users).filter(models.Users.id == user['id']).first()
     if userInfo.role != Enums.UserRoleEnum.superadmin:
-        return {'success': False, 'detail': 'You are not allowed to delete a user!'}
+        return jsonable_encoder({'success': False, 'detail': 'You are not allowed to delete a user!'})
     else:
         userTasks = db.query(models.Tasks).filter(models.Tasks.asigned_to == userId).all()
         for task in userTasks:
@@ -307,7 +308,7 @@ async def deleteUser(deleteUser: userDTO.DeleteUser, user: models.Users = Depend
         )
         db.add(deletedUsersAdd)
         db.commit()
-        return {'success': True, 'detail': 'The user has been deleted successfully. All the items about the user are set to superadmin!'}
+        return jsonable_encoder({'success': True, 'detail': 'The user has been deleted successfully. All the items about the user are set to superadmin!'})
 
 @app.put("/suspendUser", response_model=dict, status_code=status.HTTP_200_OK)
 async def suspendUser(suspendUser: userDTO.SuspendUser, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(get_db)):
@@ -318,14 +319,14 @@ async def suspendUser(suspendUser: userDTO.SuspendUser, user: models.Users = Dep
     suspendedUserRole = suspendedUserData.role
 
     if suspendedUserRole == Enums.UserRoleEnum.superadmin:
-        return {'success': False, 'detail': 'Superadmin cannot be suspended!'}
+        return jsonable_encoder({'success': False, 'detail': 'Superadmin cannot be suspended!'})
     if suspendedUserRole == Enums.UserRoleEnum.admin and userInfo.role == Enums.UserRoleEnum.admin:
-        return {'success': False, 'detail': 'Admins cannot suspend another admin!'}
+        return jsonable_encoder({'success': False, 'detail': 'Admins cannot suspend another admin!'})
 
     suspendedUserData.suspended = True
     suspendedUserData.suspended_by = userInfo.id
     db.commit()
-    return {'success': True, 'detail': 'The user has been suspended successfully!'}
+    return jsonable_encoder({'success': True, 'detail': 'The user has been suspended successfully!'})
 
 @app.put("/unsuspendUser", response_model=dict, status_code=status.HTTP_200_OK)
 async def unsuspendUser(unsuspendUser: userDTO.SuspendUser, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(get_db)):
@@ -335,16 +336,16 @@ async def unsuspendUser(unsuspendUser: userDTO.SuspendUser, user: models.Users =
     unsuspendedUserData = db.query(models.Users).filter(models.Users.id == unsuspendedUserId).first()
 
     if userInfo.role == Enums.UserRoleEnum.user:
-        return {'success': False, 'detail': 'You are not autharized to unsuspend a user!'}
+        return jsonable_encoder({'success': False, 'detail': 'You are not autharized to unsuspend a user!'})
     if userInfo.role == Enums.UserRoleEnum.admin and unsuspendedUserData.suspended_by != userInfo.id:
-        return {'success': False, 'detail': 'The user is unsuspended by another user. You cannot unsuspend!'}
+        return jsonable_encoder({'success': False, 'detail': 'The user is unsuspended by another user. You cannot unsuspend!'})
     if userInfo.role == Enums.UserRoleEnum.admin and unsuspendedUserData.suspended_by != userInfo.id and unsuspendedUserData.last_edited_by != userInfo.id:
-        return {'success': False, 'detail': 'You are not the person to make any modifications. You cannot unsuspend!'}
+        return jsonable_encoder({'success': False, 'detail': 'You are not the person to make any modifications. You cannot unsuspend!'})
 
     unsuspendedUserData.suspended = False
     unsuspendedUserData.suspended_by = None
     db.commit()
-    return {'success': True, 'detail': 'The user has been unsuspended successfully!'}
+    return jsonable_encoder({'success': True, 'detail': 'The user has been unsuspended successfully!'})
 
 @app.put("/updateUserbyAdmin", response_model=dict, status_code=status.HTTP_200_OK)
 async def updateUserbyAdmin(updatedUser: userDTO.UpdateUserbyAdmin, user: models.Users = Depends(auth.get_current_user), db: Session = Depends(get_db)):
@@ -352,34 +353,34 @@ async def updateUserbyAdmin(updatedUser: userDTO.UpdateUserbyAdmin, user: models
     updatedUserData = db.query(models.Users).filter(models.Users.username == updatedUser.username).first()
 
     if updatedUserData.suspended:
-        return {'success': False, 'detail': 'You cannot update a suspended user!'}
+        return jsonable_encoder({'success': False, 'detail': 'You cannot update a suspended user!'})
 
     if userData.role != Enums.UserRoleEnum.superadmin and updatedUserData.role == Enums.UserRoleEnum.superadmin:
-        return {'success': False, 'detail': 'You cannot update the Superadmin!'}
+        return jsonable_encoder({'success': False, 'detail': 'You cannot update the Superadmin!'})
 
     if userData.role == Enums.UserRoleEnum.user and updatedUserData.id != userData.id:
-        return {'success': False, 'detail': 'You cannot update another user!'}
+        return jsonable_encoder({'success': False, 'detail': 'You cannot update another user!'})
 
     if userData.role == Enums.UserRoleEnum.admin and updatedUserData.role == Enums.UserRoleEnum.admin and updatedUserData.id != userData.id:
-        return {'success': False, 'detail': 'You cannot update another admin!'}
+        return jsonable_encoder({'success': False, 'detail': 'You cannot update another admin!'})
 
     updatedUserData.first_name = updatedUser.first_name
     updatedUserData.last_name = updatedUser.last_name
     updatedUserData.last_edited_by = userData.id
     db.commit()
-    return {'success': True, 'detail': 'Updated the user data'}
+    return jsonable_encoder({'success': True, 'detail': 'Updated the user data'})
 
 @app.put("/suspendOrganization", response_model=dict, status_code=status.HTTP_200_OK)
 async def suspendOrganization(user: models.Users = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     userData = db.query(models.Users).filter(models.Users.id == user['id']).first()
 
     if userData.role != Enums.UserRoleEnum.superadmin:
-        return {'success': False, 'detail': 'You cannot suspend organization!'}
+        return jsonable_encoder({'success': False, 'detail': 'You cannot suspend organization!'})
 
     organization = db.query(models.Organization).first()
     organization.suspended = True
     db.commit()
-    return {'success': True, 'detail': 'Succesfully suspended the organization!'}
+    return jsonable_encoder({'success': True, 'detail': 'Succesfully suspended the organization!'})
 
 
 @app.put("/unsuspendOrganization", response_model=dict, status_code=status.HTTP_200_OK)
@@ -387,12 +388,12 @@ async def unsuspendOrganization(user: models.Users = Depends(auth.get_current_us
     userData = db.query(models.Users).filter(models.Users.id == user['id']).first()
 
     if userData.role != Enums.UserRoleEnum.superadmin:
-        return {'success': False, 'detail': 'You cannot unsuspend organization!'}
+        return jsonable_encoder({'success': False, 'detail': 'You cannot unsuspend organization!'})
 
     organization = db.query(models.Organization).first()
     organization.suspended = False
     db.commit()
-    return {'success': True, 'detail': 'Succesfully unsuspended the organization!'}
+    return jsonable_encoder({'success': True, 'detail': 'Succesfully unsuspended the organization!'})
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
